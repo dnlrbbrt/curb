@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Curb — your queue, your server</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="topbar">
+  <div class="wordmark">CURB<span class="wordmark-dot">.</span></div>
+  <nav class="tabs">
+    <button class="tab active" data-view="queue">Queue</button>
+    <button class="tab" data-view="compose">Compose</button>
+    <button class="tab" data-view="accounts">Accounts</button>
+    <button class="tab" data-view="activity">Activity</button>
+  </nav>
+  <div class="topbar-meta" id="clock"></div>
+</header>
+
+<main>
+
+<!-- ── QUEUE ── -->
+<section id="view-queue" class="view">
+  <div class="view-head">
+    <h1>Scheduled</h1>
+    <button class="btn btn-primary" data-goto="compose">+ New post</button>
+  </div>
+  <div id="queue-rail" class="rail"></div>
+  <div class="view-head" style="margin-top:48px">
+    <h1>Published &amp; past</h1>
+  </div>
+  <div id="history-rail" class="rail rail-past"></div>
+</section>
+
+<!-- ── COMPOSE ── -->
+<section id="view-compose" class="view hidden">
+  <div class="view-head"><h1>Compose</h1></div>
+  <div class="compose-grid">
+    <div class="compose-main">
+      <textarea id="post-body" placeholder="Write your caption / post text…" rows="6"></textarea>
+      <div class="char-counts" id="char-counts"></div>
+
+      <label class="drop" id="drop-zone">
+        <input type="file" id="media-input" accept="image/*,video/mp4,video/quicktime" hidden>
+        <span id="drop-label">Drop an image or video here, or click to browse</span>
+      </label>
+      <div id="media-preview" class="media-preview hidden"></div>
+
+      <div class="field-row">
+        <label class="field">
+          <span class="field-label">Publish at</span>
+          <input type="datetime-local" id="schedule-time">
+        </label>
+        <button class="btn btn-ghost" id="btn-now">Now</button>
+      </div>
+    </div>
+
+    <aside class="compose-side">
+      <div class="side-label">Post to</div>
+      <div id="target-list" class="target-list"></div>
+      <div id="platform-options"></div>
+      <button class="btn btn-primary btn-big" id="btn-schedule">Schedule post</button>
+      <div id="compose-error" class="compose-error"></div>
+    </aside>
+  </div>
+</section>
+
+<!-- ── ACCOUNTS ── -->
+<section id="view-accounts" class="view hidden">
+  <div class="view-head"><h1>Connected accounts</h1></div>
+  <div id="account-list" class="account-list"></div>
+  <div class="side-label" style="margin-top:36px">Connect a platform</div>
+  <div class="connect-row">
+    <a class="connect-card" href="/auth/instagram/start"><span class="pchip p-instagram">IG</span>Instagram<small>Business / Creator account</small></a>
+    <a class="connect-card" href="/auth/tiktok/start"><span class="pchip p-tiktok">TT</span>TikTok<small>Private until app audit passes</small></a>
+    <a class="connect-card" href="/auth/youtube/start"><span class="pchip p-youtube">YT</span>YouTube<small>~6 uploads/day on default quota</small></a>
+    <a class="connect-card" href="/auth/x/start"><span class="pchip p-x">X</span>X<small>~$0.01 per post (pay-per-use)</small></a>
+  </div>
+</section>
+
+<!-- ── ACTIVITY ── -->
+<section id="view-activity" class="view hidden">
+  <div class="view-head"><h1>Activity log</h1></div>
+  <div id="activity-list" class="activity-list"></div>
+</section>
+
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>

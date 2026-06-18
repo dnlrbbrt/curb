@@ -1,0 +1,6 @@
+node_modules/
+.env
+curb.db
+curb.db-*
+media/*
+!media/.gitkeep
