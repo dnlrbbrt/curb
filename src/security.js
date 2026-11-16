@@ -98,10 +98,26 @@ export function csrfGuard(req, res, next) {
   if (["GET", "HEAD", "OPTIONS"].includes(req.method)) return next();
   const origin = req.headers.origin;
   let ok = false;
+  const expectedHost = new URL(config.publicBaseUrl).host;
   if (origin) {
-    try { ok = new URL(origin).host === new URL(config.publicBaseUrl).host; } catch { ok = false; }
+    if (origin === "null") {
+      ok = req.get("sec-fetch-site") === "same-origin" && req.get("host") === expectedHost;
+    } else {
+      try { ok = new URL(origin).host === expectedHost; } catch { ok = false; }
+    }
   }
-  if (!ok) return res.status(403).json({ error: "Cross-site request blocked" });
+  if (!ok) {
+    console.warn("[warn] CSRF request rejected", {
+      method: req.method,
+      path: req.originalUrl,
+      origin: origin || null,
+      host: req.get("host"),
+      forwardedHost: req.get("x-forwarded-host"),
+      secFetchSite: req.get("sec-fetch-site"),
+      expectedHost,
+    });
+    return res.status(403).json({ error: "Cross-site request blocked" });
+  }
   next();
 }
 
