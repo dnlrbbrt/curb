@@ -18,7 +18,7 @@
     <button class="tab" data-view="accounts">Accounts</button>
     <button class="tab" data-view="activity">Activity</button>
   </nav>
-  <div class="topbar-meta" id="clock"></div>
+  <div class="topbar-actions"><div class="topbar-meta" id="clock"></div><button class="btn btn-mini" id="btn-logout">Sign out</button></div>
 </header>
 
 <main>
@@ -30,7 +30,7 @@
     <button class="btn btn-primary" data-goto="compose">+ New post</button>
   </div>
   <div id="queue-rail" class="rail"></div>
-  <div class="view-head" style="margin-top:48px">
+  <div class="view-head mt-48">
     <h1>Published &amp; past</h1>
   </div>
   <div id="history-rail" class="rail rail-past"></div>
@@ -73,7 +73,7 @@
 <section id="view-accounts" class="view hidden">
   <div class="view-head"><h1>Connected accounts</h1></div>
   <div id="account-list" class="account-list"></div>
-  <div class="side-label" style="margin-top:36px">Connect a platform</div>
+  <div class="side-label mt-36">Connect a platform</div>
   <div class="connect-row">
     <a class="connect-card" href="/auth/instagram/start"><span class="pchip p-instagram">IG</span>Instagram<small>Business / Creator account</small></a>
     <a class="connect-card" href="/auth/tiktok/start"><span class="pchip p-tiktok">TT</span>TikTok<small>Private until app audit passes</small></a>

@@ -1,26 +1,26 @@
 // TikTok Login Kit + Content Posting API OAuth.
 // Access tokens last 24h; refresh tokens last 365 days. Refresh aggressively.
-import crypto from "crypto";
 import { saveAccount, log } from "../db.js";
+import { createState, consumeState } from "./state.js";
+import { config } from "../config.js";
 
 const TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/";
-const states = new Set();
 
-export function authUrl() {
-  const state = crypto.randomBytes(16).toString("hex");
-  states.add(state);
+export function authUrl(sid) {
+  const { state } = createState("tiktok", sid);
   const params = new URLSearchParams({
     client_key: process.env.TIKTOK_CLIENT_KEY,
     response_type: "code",
     scope: "user.info.basic,video.publish",
-    redirect_uri: `${process.env.PUBLIC_BASE_URL}/auth/tiktok/callback`,
+    redirect_uri: `${config.publicBaseUrl}/auth/tiktok/callback`,
     state,
   });
   return `https://www.tiktok.com/v2/auth/authorize/?${params}`;
 }
 
-export async function handleCallback(code, state) {
-  if (!states.delete(state)) throw new Error("TikTok OAuth state mismatch");
+export async function handleCallback(code, state, sid) {
+  consumeState(state, "tiktok", sid);
+  if (!code) throw new Error("TikTok returned no authorization code.");
   const res = await fetch(TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -29,7 +29,7 @@ export async function handleCallback(code, state) {
       client_secret: process.env.TIKTOK_CLIENT_SECRET,
       code,
       grant_type: "authorization_code",
-      redirect_uri: `${process.env.PUBLIC_BASE_URL}/auth/tiktok/callback`,
+      redirect_uri: `${config.publicBaseUrl}/auth/tiktok/callback`,
     }),
   });
   const data = await res.json();

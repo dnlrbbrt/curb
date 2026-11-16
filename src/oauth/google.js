@@ -1,22 +1,30 @@
 // Google OAuth for YouTube Data API v3.
 // Requests offline access so we get a refresh token for unattended publishing.
 import { saveAccount, log } from "../db.js";
+import { createState, consumeState } from "./state.js";
+import { config } from "../config.js";
 
 const TOKEN_URL = "https://oauth2.googleapis.com/token";
 
-export function authUrl() {
+export function authUrl(sid) {
+  const { state, challenge } = createState("youtube", sid, true);
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID,
-    redirect_uri: `${process.env.PUBLIC_BASE_URL}/auth/youtube/callback`,
+    redirect_uri: `${config.publicBaseUrl}/auth/youtube/callback`,
     response_type: "code",
     scope: "https://www.googleapis.com/auth/youtube.upload https://www.googleapis.com/auth/youtube.readonly",
     access_type: "offline",
     prompt: "consent", // force refresh_token issuance every connect
+    state,
+    code_challenge: challenge,
+    code_challenge_method: "S256",
   });
   return `https://accounts.google.com/o/oauth2/v2/auth?${params}`;
 }
 
-export async function handleCallback(code) {
+export async function handleCallback(code, state, sid) {
+  const { verifier } = consumeState(state, "youtube", sid);
+  if (!code) throw new Error("Google returned no authorization code.");
   const res = await fetch(TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -24,8 +32,9 @@ export async function handleCallback(code) {
       code,
       client_id: process.env.GOOGLE_CLIENT_ID,
       client_secret: process.env.GOOGLE_CLIENT_SECRET,
-      redirect_uri: `${process.env.PUBLIC_BASE_URL}/auth/youtube/callback`,
+      redirect_uri: `${config.publicBaseUrl}/auth/youtube/callback`,
       grant_type: "authorization_code",
+      code_verifier: verifier,
     }),
   });
   const data = await res.json();

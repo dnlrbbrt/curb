@@ -1,4 +1,12 @@
 // Curb dashboard — vanilla JS, no build step.
+
+// If the session expires, any API call comes back 401 -> go to the login page.
+const _fetch = window.fetch.bind(window);
+window.fetch = async (...args) => {
+  const res = await _fetch(...args);
+  if (res.status === 401) location.href = "/login";
+  return res;
+};
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 
@@ -88,8 +96,8 @@ function postCard(p) {
 
   const thumb = p.media_path
     ? p.media_type === "video"
-      ? `<video class="rail-thumb" src="/media/${p.media_path}" muted></video>`
-      : `<img class="rail-thumb" src="/media/${p.media_path}" alt="">`
+      ? `<video class="rail-thumb" src="/media/${escapeHtml(p.media_path)}" muted></video>`
+      : `<img class="rail-thumb" src="/media/${escapeHtml(p.media_path)}" alt="">`
     : "";
 
   const canRetry = p.targets.some((t) => t.status === "failed") || p.status === "scheduled";
@@ -143,7 +151,7 @@ async function loadAccounts() {
       <span class="aexp">${exp}</span>
       <button class="btn btn-mini" data-dc="${a.id}">Disconnect</button>`;
     row.querySelector("[data-dc]").addEventListener("click", async () => {
-      if (!confirm(`Disconnect ${a.display_name}? Scheduled posts to this account will fail.`)) return;
+      if (!confirm(`Disconnect ${a.display_name}? Its queued posts to this account will be removed.`)) return;
       await fetch(`/api/accounts/${a.id}`, { method: "DELETE" });
       loadAccounts();
     });
@@ -161,7 +169,7 @@ function avatarFallback(name) {
 async function renderTargets() {
   accounts = await fetch("/api/accounts").then((r) => r.json());
   const el = $("#target-list");
-  el.innerHTML = accounts.length ? "" : `<div class="empty" style="padding:10px 0">Connect an account first (Accounts tab).</div>`;
+  el.innerHTML = accounts.length ? "" : `<div class="empty empty-compact">Connect an account first (Accounts tab).</div>`;
   for (const a of accounts) {
     const meta = PLATFORM[a.platform];
     const t = document.createElement("div");
@@ -257,7 +265,7 @@ async function uploadMedia(file) {
   const form = new FormData();
   form.append("file", file);
   const res = await fetch("/api/media", { method: "POST", body: form });
-  const data = await res.json();
+  const data = await res.json().catch(() => ({ error: "Upload failed." }));
   if (data.error) {
     $("#drop-label").textContent = data.error;
     return;
@@ -267,8 +275,8 @@ async function uploadMedia(file) {
   const prev = $("#media-preview");
   prev.classList.remove("hidden");
   prev.innerHTML = (data.type === "video"
-    ? `<video src="/media/${data.path}" controls muted></video>`
-    : `<img src="/media/${data.path}" alt="">`)
+    ? `<video src="/media/${escapeHtml(data.path)}" controls muted></video>`
+    : `<img src="/media/${escapeHtml(data.path)}" alt="">`)
     + `<button class="btn btn-mini" id="btn-clear-media">Remove</button>`;
   $("#btn-clear-media").addEventListener("click", () => {
     media = null;
@@ -330,7 +338,7 @@ $("#btn-schedule").addEventListener("click", async () => {
       targets,
     }),
   });
-  const data = await res.json();
+  const data = await res.json().catch(() => ({ error: "Could not schedule the post." }));
   if (data.error) return (err.textContent = data.error);
 
   // reset and jump to the queue
@@ -366,6 +374,11 @@ if (params.get("connect")) {
 function escapeHtml(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
+
+$("#btn-logout").addEventListener("click", async () => {
+  await _fetch("/logout", { method: "POST" });
+  location.href = "/login";
+});
 
 // boot
 show("queue");

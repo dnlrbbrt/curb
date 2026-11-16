@@ -2,13 +2,16 @@
 // Flow: Facebook Login -> short-lived user token -> long-lived token (60 days)
 // -> find Pages -> find linked Instagram professional accounts.
 import { saveAccount, log } from "../db.js";
+import { createState, consumeState } from "./state.js";
+import { config } from "../config.js";
 
 const GRAPH = "https://graph.facebook.com/v21.0";
 
-export function authUrl() {
+export function authUrl(sid) {
+  const { state } = createState("instagram", sid);
   const params = new URLSearchParams({
     client_id: process.env.META_APP_ID,
-    redirect_uri: `${process.env.PUBLIC_BASE_URL}/auth/instagram/callback`,
+    redirect_uri: `${config.publicBaseUrl}/auth/instagram/callback`,
     scope: [
       "instagram_basic",
       "instagram_content_publish",
@@ -16,16 +19,19 @@ export function authUrl() {
       "business_management",
     ].join(","),
     response_type: "code",
+    state,
   });
   return `https://www.facebook.com/v21.0/dialog/oauth?${params}`;
 }
 
-export async function handleCallback(code) {
+export async function handleCallback(code, state, sid) {
+  consumeState(state, "instagram", sid);
+  if (!code) throw new Error("Meta returned no authorization code.");
   // 1. code -> short-lived token
   let res = await fetch(`${GRAPH}/oauth/access_token?` + new URLSearchParams({
     client_id: process.env.META_APP_ID,
     client_secret: process.env.META_APP_SECRET,
-    redirect_uri: `${process.env.PUBLIC_BASE_URL}/auth/instagram/callback`,
+    redirect_uri: `${config.publicBaseUrl}/auth/instagram/callback`,
     code,
   }));
   let data = await res.json();

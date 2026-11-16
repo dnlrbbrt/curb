@@ -1,24 +1,16 @@
 // X API v2 OAuth 2.0 Authorization Code with PKCE.
 // offline.access scope gives a rotating refresh token.
-import crypto from "crypto";
 import { saveAccount, log } from "../db.js";
+import { createState, consumeState } from "./state.js";
+import { config } from "../config.js";
 
 const TOKEN_URL = "https://api.x.com/2/oauth2/token";
-const pending = new Map(); // state -> code_verifier
-
-function b64url(buf) {
-  return buf.toString("base64").replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-
-export function authUrl() {
-  const state = b64url(crypto.randomBytes(16));
-  const verifier = b64url(crypto.randomBytes(32));
-  const challenge = b64url(crypto.createHash("sha256").update(verifier).digest());
-  pending.set(state, verifier);
+export function authUrl(sid) {
+  const { state, challenge } = createState("x", sid, true);
   const params = new URLSearchParams({
     response_type: "code",
     client_id: process.env.X_CLIENT_ID,
-    redirect_uri: `${process.env.PUBLIC_BASE_URL}/auth/x/callback`,
+    redirect_uri: `${config.publicBaseUrl}/auth/x/callback`,
     scope: "tweet.read tweet.write users.read media.write offline.access",
     state,
     code_challenge: challenge,
@@ -31,10 +23,9 @@ function basicAuth() {
   return "Basic " + Buffer.from(`${process.env.X_CLIENT_ID}:${process.env.X_CLIENT_SECRET}`).toString("base64");
 }
 
-export async function handleCallback(code, state) {
-  const verifier = pending.get(state);
-  pending.delete(state);
-  if (!verifier) throw new Error("X OAuth state mismatch");
+export async function handleCallback(code, state, sid) {
+  const { verifier } = consumeState(state, "x", sid);
+  if (!code) throw new Error("X returned no authorization code.");
 
   const res = await fetch(TOKEN_URL, {
     method: "POST",
@@ -45,7 +36,7 @@ export async function handleCallback(code, state) {
     body: new URLSearchParams({
       code,
       grant_type: "authorization_code",
-      redirect_uri: `${process.env.PUBLIC_BASE_URL}/auth/x/callback`,
+      redirect_uri: `${config.publicBaseUrl}/auth/x/callback`,
       code_verifier: verifier,
     }),
   });

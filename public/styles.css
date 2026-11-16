@@ -402,3 +402,12 @@ textarea:focus, input:focus, select:focus { outline: 2px solid var(--accent); bo
   .rail-item { transition: border-color 0.15s; }
   .rail-item:hover { border-color: var(--muted); }
 }
+
+/* ── login + utility classes (no inline styles: strict CSP) ── */
+.login-wrap { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 24px; padding: 24px; }
+.login-card { display: flex; flex-direction: column; gap: 16px; width: min(360px, 100%); }
+.login-error { color: #e0674f; margin: 0; font-size: 14px; }
+.mt-48 { margin-top: 48px; }
+.mt-36 { margin-top: 36px; }
+.empty-compact { padding: 10px 0; }
+.topbar-actions { display: flex; align-items: center; gap: 16px; }

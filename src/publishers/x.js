@@ -1,11 +1,8 @@
 // X API v2: chunked media upload (INIT/APPEND/FINALIZE) + POST /2/tweets.
 // Pricing note: X is pay-per-use as of Feb 2026 (~$0.01 per post created).
 
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import { fileSize, readRange } from "../media.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 export async function publish({ accessToken, post }) {
@@ -35,8 +32,7 @@ export async function publish({ accessToken, post }) {
 }
 
 async function uploadMedia(accessToken, post) {
-  const filePath = path.join(__dirname, "..", "..", "media", post.media_path);
-  const buf = fs.readFileSync(filePath);
+  const total = fileSize(post.media_path);
   const isVideo = post.media_type === "video";
   const mediaType = isVideo ? "video/mp4" : guessImageMime(post.media_path);
   const category = isVideo ? "tweet_video" : "tweet_image";
@@ -49,7 +45,7 @@ async function uploadMedia(accessToken, post) {
     headers: { ...auth, "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       command: "INIT",
-      total_bytes: String(buf.length),
+      total_bytes: String(total),
       media_type: mediaType,
       media_category: category,
     }),
@@ -60,12 +56,12 @@ async function uploadMedia(accessToken, post) {
 
   // APPEND in 4MB chunks
   const CHUNK = 4 * 1024 * 1024;
-  for (let i = 0, seg = 0; i < buf.length; i += CHUNK, seg++) {
+  for (let i = 0, seg = 0; i < total; i += CHUNK, seg++) {
     const form = new FormData();
     form.append("command", "APPEND");
     form.append("media_id", mediaId);
     form.append("segment_index", String(seg));
-    form.append("media", new Blob([buf.subarray(i, i + CHUNK)]));
+    form.append("media", new Blob([await readRange(post.media_path, i, Math.min(i + CHUNK, total))]));
     res = await fetch(base, { method: "POST", headers: auth, body: form });
     if (!res.ok && res.status !== 204) {
       throw new Error(`X media APPEND failed: HTTP ${res.status}`);

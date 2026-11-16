@@ -7,11 +7,8 @@
 // NOTE: until your TikTok app passes its audit, posts are forced to
 // SELF_ONLY (private) visibility. That's TikTok policy, not a bug.
 
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+import { fileSize, readRange } from "../media.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const API = "https://open.tiktokapis.com/v2";
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -35,8 +32,7 @@ export async function publish({ accessToken, post, options }) {
   if (post.media_type !== "video") {
     throw new Error("TikTok publishing in Curb supports video only.");
   }
-  const filePath = path.join(__dirname, "..", "..", "media", post.media_path);
-  const size = fs.statSync(filePath).size;
+  const size = fileSize(post.media_path);
 
   // 1. creator info (required by TikTok's integration guidelines)
   const creator = await tk("/post/publish/creator_info/query/", accessToken);
@@ -64,15 +60,10 @@ export async function publish({ accessToken, post, options }) {
   });
 
   // 3. upload bytes
-  const buf = fs.readFileSync(filePath);
-  if (totalChunks === 1) {
-    await putChunk(init.upload_url, buf, 0, size - 1, size);
-  } else {
-    for (let i = 0; i < totalChunks; i++) {
-      const start = i * CHUNK;
-      const end = i === totalChunks - 1 ? size - 1 : start + CHUNK - 1;
-      await putChunk(init.upload_url, buf.subarray(start, end + 1), start, end, size);
-    }
+  for (let i = 0; i < totalChunks; i++) {
+    const start = i * CHUNK;
+    const end = i === totalChunks - 1 ? size - 1 : start + CHUNK - 1; // last chunk absorbs the remainder
+    await putChunk(init.upload_url, await readRange(post.media_path, start, end + 1), start, end, size);
   }
 
   // 4. poll status

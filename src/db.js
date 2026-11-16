@@ -6,6 +6,7 @@ import { fileURLToPath } from "url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const db = new Database(path.join(__dirname, "..", "curb.db"));
 db.pragma("journal_mode = WAL");
+db.pragma("foreign_keys = ON"); // makes the ON DELETE CASCADE rules actually run
 
 db.exec(`
 CREATE TABLE IF NOT EXISTS accounts (
@@ -53,7 +54,8 @@ CREATE TABLE IF NOT EXISTS activity (
 `);
 
 // ── token encryption (AES-256-GCM, key derived from APP_SECRET) ──
-const KEY = crypto.scryptSync(process.env.APP_SECRET || "dev-secret", "curb-salt", 32);
+// APP_SECRET is validated in config.js (server refuses to start without a strong one).
+const KEY = crypto.scryptSync(process.env.APP_SECRET, "curb-salt", 32);
 
 export function encrypt(text) {
   if (text == null) return null;
@@ -75,8 +77,9 @@ export function decrypt(blob) {
 }
 
 export function log(message, level = "info") {
-  db.prepare("INSERT INTO activity (level, message) VALUES (?, ?)").run(level, message);
-  console.log(`[${level}] ${message}`);
+  const msg = String(message).slice(0, 1000);
+  db.prepare("INSERT INTO activity (level, message) VALUES (?, ?)").run(level, msg);
+  console.log(`[${level}] ${msg}`);
 }
 
 export function saveAccount({ platform, externalId, displayName, avatarUrl, accessToken, refreshToken, expiresAt, meta }) {

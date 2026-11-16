@@ -3,6 +3,8 @@
 // PUBLIC_BASE_URL), poll until processed, then publish.
 // Hard platform limit: 50 API-published posts per account per 24h.
 
+import { mediaUrl as signedMediaUrl } from "../media.js";
+
 const GRAPH = "https://graph.facebook.com/v21.0";
 
 async function graph(path, params, method = "GET") {
@@ -26,7 +28,8 @@ export async function publish({ account, accessToken, post, options }) {
   if (!post.media_path) {
     throw new Error("Instagram requires an image or video. Text-only posts aren't supported by the API.");
   }
-  const mediaUrl = `${process.env.PUBLIC_BASE_URL}/media/${post.media_path}`;
+  // Scoped to this one file and expires after 2 hours; Meta fetches it when the container is created.
+  const mediaUrl = signedMediaUrl(post.media_path, 2 * 3600);
 
   // 1. create container
   const containerParams = { access_token: accessToken, caption };

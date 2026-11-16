@@ -20,9 +20,12 @@ The audits are the moat Buffer's pricing pays for. They're one-time, free, and a
 ```bash
 cp .env.example .env          # fill in as you go
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"   # -> APP_SECRET
+# also set OWNER_PASSWORD in .env (12+ characters): it's the dashboard login
 npm install
-npm start                     # dashboard at http://localhost:3000
+npm start                     # dashboard at http://localhost:3000, sign in with OWNER_PASSWORD
 ```
+
+Curb **refuses to start** unless `APP_SECRET` (32+ chars) and `OWNER_PASSWORD` (12+ chars) are set and `PUBLIC_BASE_URL` is `https://` (or localhost). By default it listens on `127.0.0.1` only.
 
 ### You need a public URL
 
@@ -37,7 +40,11 @@ cloudflared tunnel --url http://localhost:3000
 
 Copy the `https://xxxx.trycloudflare.com` URL into `PUBLIC_BASE_URL` in `.env` and into each platform's redirect-URI settings. Note the free quick-tunnel URL changes each run; a named tunnel or ngrok static domain keeps it stable.
 
-**Production:** a $5 VPS (Hetzner, DigitalOcean) with a domain + Caddy or nginx for HTTPS. Set `PUBLIC_BASE_URL=https://curb.yourdomain.com`.
+**Production:** a $5 VPS (Hetzner, DigitalOcean) with a domain + Caddy or nginx for HTTPS, proxying to `127.0.0.1:3000`. Set `PUBLIC_BASE_URL=https://curb.yourdomain.com` and `TRUST_PROXY=1`.
+
+Register the exact callback URLs `{PUBLIC_BASE_URL}/auth/{instagram|tiktok|youtube|x}/callback` with each platform.
+
+If you put an extra access layer in front (Cloudflare Access, basic auth, VPN), leave `/media/*` reachable: Instagram's servers fetch media from there. Those URLs are signed and expire after 2 hours; without a valid signature `/media/*` answers 404 to everyone not signed in.
 
 ---
 
@@ -103,16 +110,36 @@ Notes: X rotates refresh tokens on every refresh; Curb handles that. Posting res
 
 A cron loop checks every minute for posts whose time has arrived, refreshes any stale tokens, and publishes to each selected account. Per-target results are recorded independently, so one platform failing doesn't block the others — failed targets show a "Retry failed" button with the error message on hover.
 
-Media files live in `./media/` and are served at `/media/*`. Instagram pulls files from `{PUBLIC_BASE_URL}/media/...`; TikTok, YouTube, and X receive direct binary uploads.
+Media files live in `./media/`. Only JPG/PNG/GIF/WEBP/MP4/MOV/M4V/WEBM uploads are accepted (contents are checked against the extension). `/media/*` is served only to the signed-in owner or via a signed, expiring URL; Instagram pulls its file from such a URL, while TikTok, YouTube, and X receive direct chunked binary uploads. Unused uploads are removed after 24 hours.
 
-Tokens are encrypted at rest (AES-256-GCM keyed off `APP_SECRET`) in a local SQLite file, `curb.db`. Back that file up if you care about your queue.
+"Post now" and the scheduler claim each post atomically, so a post is never published twice by accident. If the server dies mid-publish, those targets are marked **failed** with a note (not auto-retried: the platform may already have accepted the post), so check the platform before pressing Retry.
+
+Tokens are encrypted at rest (AES-256-GCM keyed off `APP_SECRET`) in a local SQLite file, `curb.db`.
+
+## Security model
+
+- Single owner, password login (`OWNER_PASSWORD`), signed HttpOnly `SameSite=Lax` session cookie (`Secure` over https). Login is rate-limited (5 failures / 15 min / IP).
+- Every dashboard, API, upload and OAuth route requires the session. State-changing requests must carry a same-origin `Origin` header (CSRF).
+- OAuth `state` is random, expires after 10 minutes, is single-use, and is bound to your session; PKCE is used for X and Google.
+- Strict CSP and other security headers are set on every response.
+- Run **one** instance (the scheduler and OAuth state live in-process).
+
+## Backups
+
+Back these up separately, and keep the key apart from the data:
+
+- `curb.db` (plus `curb.db-wal`, or checkpoint first / use `sqlite3 curb.db ".backup backup.db"`): accounts, queue, history
+- `media/`: files for queued posts
+- `APP_SECRET` (from `.env`): without it the encrypted tokens in `curb.db` are unreadable and you must reconnect every account
+
+Rotating `APP_SECRET` invalidates all sessions and stored tokens; reconnect your accounts afterwards.
 
 ## Staying in the safe lane (read this once)
 
 - **Never** add browser automation, cookie-based posting, or unofficial endpoints to this tool. That's the line between "scheduler" and "ban risk".
 - Respect the built-in limits: 50/day Instagram, ~6/day YouTube uploads on default quota, TikTok 6 requests/min. Curb won't stop you from scheduling more than Instagram allows in a day — space things out.
 - Don't share one platform app across many unrelated users without going through each platform's review; the audits exist for exactly that.
-- Keep `.env` and `curb.db` off GitHub. There's a `.gitignore` for this.
+- Keep `.env` and `curb.db` off GitHub (there's a `.gitignore` for this), out of logs, and out of chat/screenshots.
 
 ## Running it 24/7
 
@@ -120,8 +147,8 @@ The scheduler only fires while the server is running. On a VPS:
 
 ```bash
 npm install -g pm2
-pm2 start src/server.js --name curb
+pm2 start src/server.js --name curb --instances 1
 pm2 save && pm2 startup
 ```
 
-Or a systemd unit, or Docker — anything that keeps `node src/server.js` alive.
+Or a systemd unit (`Restart=always`), or Docker — anything that keeps exactly one `node src/server.js` alive with persistent storage for `curb.db` and `media/`.
