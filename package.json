@@ -1,7 +1,7 @@
 {
   "name": "curb",
   "version": "1.0.0",
-  "description": "Self-hosted social media scheduler using official platform APIs (Instagram, TikTok, YouTube, X)",
+  "description": "Self-hosted social media scheduler using official platform APIs (Instagram, Facebook Pages, TikTok, YouTube, X)",
   "main": "src/server.js",
   "type": "module",
   "scripts": {

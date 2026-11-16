@@ -76,6 +76,7 @@ const oneOf = (v, list, dflt) => (list.includes(v) ? v : dflt);
 
 const OPTIONS = {
   instagram: (o) => ({ shareToFeed: o.shareToFeed === false ? false : true }),
+  facebook: () => ({}),
   tiktok: (o) => ({
     privacy: oneOf(o.privacy, ["PUBLIC_TO_EVERYONE", "MUTUAL_FOLLOW_FRIENDS", "FOLLOWER_OF_CREATOR", "SELF_ONLY"], "SELF_ONLY"),
     disableComment: bool(o.disableComment),
@@ -93,7 +94,7 @@ const OPTIONS = {
   x: () => ({}),
 };
 
-const CAPTION_LIMIT = { instagram: 2200, tiktok: 2200, youtube: 5000, x: 25000 };
+const CAPTION_LIMIT = { instagram: 2200, facebook: 63206, tiktok: 2200, youtube: 5000, x: 25000 };
 
 router.post("/posts", (req, res) => {
   const b = req.body && typeof req.body === "object" ? req.body : {};
@@ -141,6 +142,7 @@ router.post("/posts", (req, res) => {
       return bad(res, "TikTok and YouTube need a video file.");
     }
     if (account.platform === "x" && !body.trim() && !mediaPath) return bad(res, "An X post needs text or media.");
+    if (account.platform === "facebook" && !body.trim() && !mediaPath) return bad(res, "A Facebook post needs text or media.");
     targets.push({ accountId, platform: account.platform, options: opts });
   }
 

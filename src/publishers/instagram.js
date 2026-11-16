@@ -5,7 +5,7 @@
 
 import { mediaUrl as signedMediaUrl } from "../media.js";
 
-const GRAPH = "https://graph.facebook.com/v21.0";
+const GRAPH = "https://graph.facebook.com/v27.0";
 
 async function graph(path, params, method = "GET") {
   const url = `${GRAPH}/${path}` + (method === "GET" ? `?${new URLSearchParams(params)}` : "");

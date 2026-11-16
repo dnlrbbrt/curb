@@ -9,6 +9,7 @@ Curb publishes through the **official APIs** of each platform — the same APIs 
 | Platform | Works day one? | The catch |
 |---|---|---|
 | **Instagram** | Yes, for your own accounts | Requires a Business/Creator IG account linked to a Facebook Page. Your Meta app works in dev mode for accounts you admin. Hard limit: 50 API posts per account per 24h. Media must be fetchable from a public URL (see PUBLIC_BASE_URL). |
+| **Facebook Pages** | Yes, for Pages you manage | Connects Pages where your Facebook account can create content. Requires `pages_show_list`, `pages_read_engagement`, and `pages_manage_posts` on the Meta app. Personal profiles cannot be connected. |
 | **X** | Yes | X uses pay-per-use pricing: currently $0.015 per post creation request. 100 posts cost about $1.50, before any applicable taxes or other API usage. |
 | **TikTok** | Posts work immediately, but are **private (Only Me)** until your app passes TikTok's audit | The audit is free, takes ~5–10 business days, and requires a short PDF + screen recording of your posting flow. Until then you can post privately and flip videos to public by hand in the app. |
 | **YouTube** | Uploads work day one, but videos from **unverified API projects are locked private** | Request an API audit/verification from Google to lift it. Default quota allows ~6 uploads/day (each upload costs 1600 of 10,000 daily units). |
@@ -42,7 +43,7 @@ Copy the `https://xxxx.trycloudflare.com` URL into `PUBLIC_BASE_URL` in `.env` a
 
 **Production:** a $5 VPS (Hetzner, DigitalOcean) with a domain + Caddy or nginx for HTTPS, proxying to `127.0.0.1:3000`. Set `PUBLIC_BASE_URL=https://curb.yourdomain.com` and `TRUST_PROXY=1`.
 
-Register the exact callback URLs `{PUBLIC_BASE_URL}/auth/{instagram|tiktok|youtube|x}/callback` with each platform.
+Register the exact callback URLs `{PUBLIC_BASE_URL}/auth/{instagram|facebook|tiktok|youtube|x}/callback` with each platform.
 
 If you put an extra access layer in front (Cloudflare Access, basic auth, VPN), leave `/media/*` reachable: Instagram's servers fetch media from there. Those URLs are signed and expire after 2 hours; without a valid signature `/media/*` answers 404 to everyone not signed in.
 
@@ -58,6 +59,7 @@ Prereqs: your Instagram must be a **Business or Creator** account, linked to a *
 2. In the app dashboard, add the **Instagram Graph API** and **Facebook Login for Business** products.
 3. Under Facebook Login → Settings, add this Valid OAuth Redirect URI:
    `{PUBLIC_BASE_URL}/auth/instagram/callback`
+   Also add `{PUBLIC_BASE_URL}/auth/facebook/callback` for Facebook Pages.
 4. Copy the **App ID** and **App Secret** (Settings → Basic) into `.env` as `META_APP_ID` / `META_APP_SECRET`.
 5. In Curb → Accounts → Connect Instagram. Log in with the Facebook account that manages the Page.
 
@@ -67,6 +69,10 @@ Notes:
 - Videos publish as **Reels** (that's the only video type the API supports, and it's what you want anyway).
 - Image specs: JPEG/PNG. Reels: MP4 (H.264/AAC), 9:16 recommended, under 15 minutes.
 - Tokens are long-lived (60 days); Curb re-exchanges them automatically when under a week remains.
+
+### Facebook Pages (Meta Graph API)
+
+Uses the same Meta app and App ID / App Secret as Instagram. In Facebook Login → Permissions and Features, request `pages_show_list`, `pages_read_engagement`, and `pages_manage_posts`. For a single-owner app in Development mode, connect with a Facebook account that has a Page task allowing it to create content. Curb connects the Pages returned by Meta and publishes Page posts as text, images, or videos through the Graph API. Personal Facebook profiles are not supported.
 
 ### TikTok (Content Posting API)
 

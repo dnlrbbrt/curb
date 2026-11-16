@@ -11,7 +11,7 @@ db.pragma("foreign_keys = ON"); // makes the ON DELETE CASCADE rules actually ru
 db.exec(`
 CREATE TABLE IF NOT EXISTS accounts (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
-  platform TEXT NOT NULL,            -- instagram | tiktok | youtube | x
+    platform TEXT NOT NULL,            -- instagram | facebook | tiktok | youtube | x
   external_id TEXT NOT NULL,
   display_name TEXT,
   avatar_url TEXT,

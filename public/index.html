@@ -29,6 +29,20 @@
     <h1>Scheduled</h1>
     <button class="btn btn-primary" data-goto="compose">+ New post</button>
   </div>
+  <section class="calendar" aria-label="Post calendar">
+    <div class="calendar-head">
+      <div><h2 id="calendar-title"></h2><p>Scheduled posts by day and platform</p></div>
+      <div class="calendar-controls">
+        <button class="btn btn-mini" id="calendar-prev" aria-label="Previous month">←</button>
+        <button class="btn btn-mini" id="calendar-today">Today</button>
+        <button class="btn btn-mini" id="calendar-next" aria-label="Next month">→</button>
+      </div>
+    </div>
+    <div class="calendar-grid calendar-weekdays" aria-hidden="true">
+      <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+    </div>
+    <div id="calendar-days" class="calendar-grid calendar-days"></div>
+  </section>
   <div id="queue-rail" class="rail"></div>
   <div class="view-head mt-48">
     <h1>Published &amp; past</h1>
@@ -50,12 +64,20 @@
       </label>
       <div id="media-preview" class="media-preview hidden"></div>
 
-      <div class="field-row">
-        <label class="field">
-          <span class="field-label">Publish at</span>
-          <input type="datetime-local" id="schedule-time">
-        </label>
-        <button class="btn btn-ghost" id="btn-now">Now</button>
+      <div class="schedule-panel">
+        <div class="schedule-heading">
+          <div><span class="field-label">When should it publish?</span><p>Times use your device's local time.</p></div>
+          <button class="btn btn-ghost" id="btn-now">Publish soon</button>
+        </div>
+        <div class="schedule-fields">
+          <label class="field"><span class="field-label">Date</span><input type="date" id="schedule-date"></label>
+          <label class="field"><span class="field-label">Time</span><input type="time" id="schedule-clock" step="60"></label>
+        </div>
+        <div class="schedule-shortcuts" aria-label="Quick schedule choices">
+          <button class="btn btn-mini" data-schedule-offset="3600000">In 1 hour</button>
+          <button class="btn btn-mini" data-schedule-tomorrow>Tomorrow</button>
+        </div>
+        <p class="schedule-preview" id="schedule-preview">Choose a date and time.</p>
       </div>
     </div>
 
@@ -75,10 +97,11 @@
   <div id="account-list" class="account-list"></div>
   <div class="side-label mt-36">Connect a platform</div>
   <div class="connect-row">
-    <a class="connect-card" href="/auth/instagram/start"><span class="pchip p-instagram">IG</span>Instagram<small>Business / Creator account</small></a>
-    <a class="connect-card" href="/auth/tiktok/start"><span class="pchip p-tiktok">TT</span>TikTok<small>Private until app audit passes</small></a>
-    <a class="connect-card" href="/auth/youtube/start"><span class="pchip p-youtube">YT</span>YouTube<small>~6 uploads/day on default quota</small></a>
-    <a class="connect-card" href="/auth/x/start"><span class="pchip p-x">X</span>X<small>~$0.01 per post (pay-per-use)</small></a>
+    <a class="connect-card" href="/auth/instagram/start"><span class="pchip p-instagram" data-platform="instagram"></span>Instagram<small>Business / Creator account</small></a>
+    <a class="connect-card" href="/auth/facebook/start"><span class="pchip p-facebook" data-platform="facebook"></span>Facebook<small>Facebook Pages you manage</small></a>
+    <a class="connect-card" href="/auth/tiktok/start"><span class="pchip p-tiktok" data-platform="tiktok"></span>TikTok<small>Private until app audit passes</small></a>
+    <a class="connect-card" href="/auth/youtube/start"><span class="pchip p-youtube" data-platform="youtube"></span>YouTube<small>~6 uploads/day on default quota</small></a>
+    <a class="connect-card" href="/auth/x/start"><span class="pchip p-x" data-platform="x"></span>X<small>~$0.01 per post (pay-per-use)</small></a>
   </div>
 </section>
 

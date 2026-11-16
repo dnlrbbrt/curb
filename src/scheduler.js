@@ -13,12 +13,13 @@ import * as tiktokAuth from "./oauth/tiktok.js";
 import * as googleAuth from "./oauth/google.js";
 import * as xAuth from "./oauth/x.js";
 import * as instagram from "./publishers/instagram.js";
+import * as facebook from "./publishers/facebook.js";
 import * as tiktok from "./publishers/tiktok.js";
 import * as youtube from "./publishers/youtube.js";
 import * as x from "./publishers/x.js";
 
-const refreshers = { instagram: metaAuth, tiktok: tiktokAuth, youtube: googleAuth, x: xAuth };
-const publishers = { instagram, tiktok, youtube, x };
+const refreshers = { instagram: metaAuth, facebook: metaAuth, tiktok: tiktokAuth, youtube: googleAuth, x: xAuth };
+const publishers = { instagram, facebook, tiktok, youtube, x };
 
 let running = false;
 

@@ -10,7 +10,8 @@ import { log } from "../db.js";
 const router = Router();
 
 const providers = {
-  instagram: { auth: meta.authUrl, cb: (q, sid) => meta.handleCallback(q.code, q.state, sid) },
+  instagram: { auth: (sid) => meta.authUrl("instagram", sid), cb: (q, sid) => meta.handleCallback("instagram", q.code, q.state, sid) },
+  facebook: { auth: (sid) => meta.authUrl("facebook", sid), cb: (q, sid) => meta.handleCallback("facebook", q.code, q.state, sid) },
   tiktok: { auth: tiktok.authUrl, cb: (q, sid) => tiktok.handleCallback(q.code, q.state, sid) },
   youtube: { auth: google.authUrl, cb: (q, sid) => google.handleCallback(q.code, q.state, sid) },
   x: { auth: x.authUrl, cb: (q, sid) => x.handleCallback(q.code, q.state, sid) },
@@ -18,6 +19,7 @@ const providers = {
 
 const envCheck = {
   instagram: ["META_APP_ID", "META_APP_SECRET"],
+  facebook: ["META_APP_ID", "META_APP_SECRET"],
   tiktok: ["TIKTOK_CLIENT_KEY", "TIKTOK_CLIENT_SECRET"],
   youtube: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET"],
   x: ["X_CLIENT_ID", "X_CLIENT_SECRET"],
