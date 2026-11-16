@@ -9,7 +9,7 @@ Curb publishes through the **official APIs** of each platform — the same APIs 
 | Platform | Works day one? | The catch |
 |---|---|---|
 | **Instagram** | Yes, for your own accounts | Requires a Business/Creator IG account linked to a Facebook Page. Your Meta app works in dev mode for accounts you admin. Hard limit: 50 API posts per account per 24h. Media must be fetchable from a public URL (see PUBLIC_BASE_URL). |
-| **X** | Yes | X moved to pay-per-use pricing in Feb 2026: roughly $0.01 per post created. Posting 100 times a month costs about a dollar. |
+| **X** | Yes | X uses pay-per-use pricing: currently $0.015 per post creation request. 100 posts cost about $1.50, before any applicable taxes or other API usage. |
 | **TikTok** | Posts work immediately, but are **private (Only Me)** until your app passes TikTok's audit | The audit is free, takes ~5–10 business days, and requires a short PDF + screen recording of your posting flow. Until then you can post privately and flip videos to public by hand in the app. |
 | **YouTube** | Uploads work day one, but videos from **unverified API projects are locked private** | Request an API audit/verification from Google to lift it. Default quota allows ~6 uploads/day (each upload costs 1600 of 10,000 daily units). |
 
@@ -96,7 +96,7 @@ Notes:
 
 ### X (API v2)
 
-1. Go to [developer.x.com](https://developer.x.com) → sign up for a developer account (pay-per-use is the default for new accounts: ~$0.01 per post created, no monthly fee).
+1. Go to [developer.x.com](https://developer.x.com) → sign up for a developer account. X currently lists post creation at $0.015 per request; check its [live pricing](https://developer.x.com/) before enabling posting because rates can change.
 2. Create a Project + App. In the app's **User authentication settings**: enable OAuth 2.0, type "Web App", and set the callback URI:
    `{PUBLIC_BASE_URL}/auth/x/callback`
 3. Copy the OAuth 2.0 **Client ID** and **Client Secret** into `.env`.
