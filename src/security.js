@@ -99,7 +99,7 @@ export function csrfGuard(req, res, next) {
   const origin = req.headers.origin;
   let ok = false;
   if (origin) {
-    try { ok = new URL(origin).host === req.get("host"); } catch { ok = false; }
+    try { ok = new URL(origin).host === new URL(config.publicBaseUrl).host; } catch { ok = false; }
   }
   if (!ok) return res.status(403).json({ error: "Cross-site request blocked" });
   next();
