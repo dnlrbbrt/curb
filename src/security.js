@@ -106,18 +106,7 @@ export function csrfGuard(req, res, next) {
       try { ok = new URL(origin).host === expectedHost; } catch { ok = false; }
     }
   }
-  if (!ok) {
-    console.warn("[warn] CSRF request rejected", {
-      method: req.method,
-      path: req.originalUrl,
-      origin: origin || null,
-      host: req.get("host"),
-      forwardedHost: req.get("x-forwarded-host"),
-      secFetchSite: req.get("sec-fetch-site"),
-      expectedHost,
-    });
-    return res.status(403).json({ error: "Cross-site request blocked" });
-  }
+  if (!ok) return res.status(403).json({ error: "Cross-site request blocked" });
   next();
 }
 
