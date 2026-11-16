@@ -72,7 +72,7 @@ Notes:
 
 ### Facebook Pages (Meta Graph API)
 
-Uses the same Meta app and App ID / App Secret as Instagram. In Facebook Login → Permissions and Features, request `pages_show_list`, `pages_read_engagement`, and `pages_manage_posts`. For a single-owner app in Development mode, connect with a Facebook account that has a Page task allowing it to create content. Curb connects the Pages returned by Meta and publishes Page posts as text, images, or videos through the Graph API. Personal Facebook profiles are not supported.
+Uses the same Meta app and App ID / App Secret as Instagram. In Facebook Login → Permissions and Features, request `pages_show_list`, `pages_read_engagement`, `pages_manage_posts`, and `business_management`. Meta requires `business_management` for `/me/accounts` to return Pages linked to a Business portfolio. For a single-owner app in Development mode, connect with a Facebook account that has a Page task allowing it to create content. Curb connects the Pages returned by Meta and publishes Page posts as text, images, or videos through the Graph API. Personal Facebook profiles are not supported.
 
 ### TikTok (Content Posting API)
 

@@ -10,7 +10,7 @@ const GRAPH = "https://graph.facebook.com/v27.0";
 export function authUrl(platform, sid) {
   const { state } = createState(platform, sid);
   const scopes = platform === "facebook"
-    ? ["pages_show_list", "pages_read_engagement", "pages_manage_posts"]
+    ? ["pages_show_list", "pages_read_engagement", "pages_manage_posts", "business_management"]
     : ["instagram_basic", "instagram_content_publish", "pages_show_list", "business_management"];
   const params = new URLSearchParams({
     client_id: process.env.META_APP_ID,
