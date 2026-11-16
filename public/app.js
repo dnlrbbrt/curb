@@ -28,7 +28,10 @@ const PLATFORM_PATHS = {
 function platformIcon(platform) {
   const meta = PLATFORM[platform] || { chip: "?", cls: "" };
   const path = PLATFORM_PATHS[platform];
-  return `<span class="pchip ${meta.cls}" title="${escapeHtml(platform)}" aria-label="${escapeHtml(platform)}">${path ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg>` : meta.chip}</span>`;
+  const icon = platform === "tiktok"
+    ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="tt-cyan" d="${path}" transform="translate(-.9 0)"/><path class="tt-red" d="${path}" transform="translate(.9 0)"/><path class="tt-core" d="${path}"/></svg>`
+    : path ? `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"/></svg>` : meta.chip;
+  return `<span class="pchip ${meta.cls}" title="${escapeHtml(platform)}" aria-label="${escapeHtml(platform)}">${icon}</span>`;
 }
 
 let accounts = [];

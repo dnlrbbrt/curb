@@ -11,7 +11,6 @@
   --red: #e5484d;
   --ig: #d6409f;
   --fb: #1877f2;
-  --tt: #3fd2c7;
   --yt: #e5484d;
   --x-c: #b8b3a7;
 }
@@ -261,12 +260,15 @@ h1 {
 }
 .p-instagram { background: var(--ig); }
 .p-facebook { background: var(--fb); color: #fff; }
-.p-tiktok { background: var(--tt); }
+.p-tiktok { background: #101010; color: #fff; }
 .p-youtube { background: var(--yt); color: #fff; }
 .p-x { background: var(--x-c); }
 .pchip svg { display: block; width: 15px; height: 15px; fill: currentColor; }
 .p-instagram { color: #fff; }
-.p-tiktok, .p-x { color: #101010; }
+.p-x { color: #101010; }
+.p-tiktok .tt-cyan { fill: #25f4ee; }
+.p-tiktok .tt-red { fill: #fe2c55; }
+.p-tiktok .tt-core { fill: #fff; }
 
 .tchip {
   display: inline-flex;
