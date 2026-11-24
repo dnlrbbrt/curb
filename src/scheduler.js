@@ -17,6 +17,7 @@ import * as facebook from "./publishers/facebook.js";
 import * as tiktok from "./publishers/tiktok.js";
 import * as youtube from "./publishers/youtube.js";
 import * as x from "./publishers/x.js";
+import { notifyCrmPublished, syncRecentToCrm } from "./crm.js";
 
 const refreshers = { instagram: metaAuth, facebook: metaAuth, tiktok: tiktokAuth, youtube: googleAuth, x: xAuth };
 const publishers = { instagram, facebook, tiktok, youtube, x };
@@ -28,6 +29,7 @@ export function startScheduler() {
   cron.schedule("* * * * *", tick);
   cron.schedule("17 3 * * *", cleanupOrphanMedia);
   log("Scheduler started (checks every minute)");
+  syncRecentToCrm(); // no-op unless CRM_WEBHOOK_URL / CRM_WEBHOOK_TOKEN are set
 }
 
 /** Atomically move a post into 'publishing'. Returns false if someone else already has it. */
@@ -110,6 +112,7 @@ export async function publishPost(post) {
         "UPDATE post_targets SET status = 'published', external_post_id = ?, published_at = ? WHERE id = ?"
       ).run(result.externalPostId || null, Date.now(), target.id);
       log(`Published post #${post.id} to ${target.platform} (${account.display_name})`);
+      notifyCrmPublished({ id: target.id, platform: target.platform, externalPostId: result.externalPostId });
     } catch (err) {
       db.prepare("UPDATE post_targets SET status = 'failed', error = ? WHERE id = ?").run(String(err.message).slice(0, 500), target.id);
       log(`Post #${post.id} failed on ${target.platform}: ${err.message}`, "error");
